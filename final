@@ -1,0 +1,154 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_ITEMS 50
+#define MAX_NAME_LENGTH 50
+
+typedef struct {
+    char name[MAX_NAME_LENGTH];
+    int quantity;
+    float price;
+} Item;
+
+void displayMenu() {
+    printf("\nInventory Management System\n");
+    printf("1. Add item\n");
+    printf("2. Remove item\n");
+    printf("3. Update item\n");
+    printf("4. Display inventory\n");
+    printf("5. Exit\n");
+    printf("Enter your choice: ");
+}
+
+void addItem(Item inventory[], int *count) {
+    if (*count >= MAX_ITEMS) {
+        printf("Inventory is full.\n");
+        return;
+    }
+
+    printf("Enter item name: ");
+    scanf("%s", &inventory[*count].name);
+    printf("Enter quantity: ");
+    scanf("%d", &inventory[*count].quantity);
+    printf("Enter price: ");
+    scanf("%f", &inventory[*count].price);
+
+    (*count)++;
+    printf("Item added successfully.\n");
+}
+
+void removeItem(Item inventory[], int *count) {
+    char itemName[MAX_NAME_LENGTH];
+    printf("Enter the name of the item to remove: ");
+    scanf("%s", &itemName);
+
+    int found = 0;
+    for (int i = 0; i < *count; i++) {
+        if (strcmp(inventory[i].name, itemName) == 0) {
+            for (int j = i; j < *count - 1; j++) {
+                strcpy(inventory[j].name, inventory[j + 1].name);
+                inventory[j].quantity = inventory[j + 1].quantity;
+                inventory[j].price = inventory[j + 1].price;
+            }
+            (*count)--;
+            found = 1;
+            break;
+        }
+    }
+
+    if (found)
+        printf("Item removed successfully.\n");
+    else
+        printf("Item not found in inventory.\n");
+}
+
+void updateItem(Item inventory[], int count) {
+    char itemName[MAX_NAME_LENGTH];
+    printf("Enter the name of the item to update: ");
+    scanf("%s", &itemName);
+
+    int found = 0;
+    for (int i = 0; i < count; i++) {
+        if (strcmp(inventory[i].name, itemName) == 0) {
+            printf("Enter new quantity: ");
+            scanf("%d", &inventory[i].quantity);
+            printf("Enter new price: ");
+            scanf("%f", &inventory[i].price);
+            found = 1;
+            break;
+        }
+    }
+
+    if (found)
+        printf("Item updated successfully.\n");
+    else
+        printf("Item not found in inventory.\n");
+}
+
+void displayInventory(Item inventory[], int count) {
+    printf("\nInventory:\n");
+    printf("%-20s %-10s %-10s\n", "Name", "Quantity", "Price");
+    for (int i = 0; i < count; i++) {
+        printf("%-20s %-10d %-10.2f\n", inventory[i].name, inventory[i].quantity, inventory[i].price);
+    }
+}
+
+void saveInventoryToFile(Item inventory[], int count) {
+    FILE *file = fopen("inventory.txt", "w");
+    if (file == NULL) {
+        printf("Error opening file.\n");
+        return;
+    }
+
+    for (int i = 0; i < count; i++) {
+        fprintf(file, "%s %d %.2f\n", inventory[i].name, inventory[i].quantity, inventory[i].price);
+    }
+
+    fclose(file);
+}
+
+int main() {
+    Item inventory[MAX_ITEMS];
+    int itemCount = 0;
+
+    FILE *file = fopen("inventory.txt", "r");
+    if (file != NULL) {
+        while (fscanf(file, "%s %d %f", inventory[itemCount].name, &inventory[itemCount].quantity, &inventory[itemCount].price) != EOF) {
+            itemCount++;
+        }
+        fclose(file);
+    }
+
+    int choice;
+    do {
+        displayMenu();
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                addItem(inventory, &itemCount);
+                break;
+            case 2:
+                removeItem(inventory, &itemCount);
+                break;
+            case 3:
+                updateItem(inventory, itemCount);
+                break;
+            case 4:
+                displayInventory(inventory, itemCount);
+                break;
+            case 5:
+                saveInventoryToFile(inventory, itemCount);
+                printf("Inventory saved to file.\n");
+                break;
+            case 6:
+                printf("Exiting...\n");
+                break;
+            default:
+                printf("Invalid choice. Please try again.\n");
+        }
+    } while (choice != 6);
+
+    return 0;
+}
